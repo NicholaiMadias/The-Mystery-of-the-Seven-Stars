@@ -1,0 +1,50 @@
+:root {
+    --gold: #ffd700;
+    --nebula: rgba(74, 35, 90, 0.8);
+}
+
+#match-board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    width: 360px;
+    height: 360px;
+    margin: 20px auto;
+    padding: 15px;
+    background: url('assets/starfield_bg.jpg') no-repeat center; /* Optional BG */
+    background-size: cover;
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 20px var(--nebula);
+}
+
+.square {
+    width: 50px;
+    height: 50px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.square:hover {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+}
+
+/* Specific Classes for your Uploaded Star Assets */
+.star-gold { background-image: url('assets/star_crystal_gold.png'); }
+.star-blue { background-image: url('assets/star_crystal_blue.png'); }
+.star-purple { background-image: url('assets/star_crystal_purple.png'); }
+.star-red { background-image: url('assets/star_crystal_red.png'); }
+
+/* Animation for a Match */
+.match-explode {
+    animation: supernova 0.5s forwards;
+    background-image: url('assets/supernova_explosion.png') !important;
+}
+
+@keyframes supernova {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
