@@ -6,7 +6,8 @@ import {
   Save, Search, Download, BookOpen, ShieldCheck, Trophy, Sparkles,
   Home, Wifi, Trash2, Droplets, Car, Coffee, Phone, Mail, UploadCloud,
   CheckCircle2, PlusCircle, LogIn, Github, Menu, X, ToggleRight, ToggleLeft, 
-  Cpu, Activity, History, Shield, AlertTriangle, Lock, Unlock, RefreshCw
+  Cpu, Activity, History, Shield, AlertTriangle, Lock, Unlock, RefreshCw,
+  ShoppingCart, Users
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { 
@@ -33,6 +34,15 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'nexus-os-v15';
 
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
+
+const STORE_ITEMS = [
+  { id: 'star_cascade', name: 'Star Cascade', desc: 'Triggers bonus star combos in next session', cost: 50, icon: Star, color: '#fbbf24', effect: '+25% star score' },
+  { id: 'matrix_shield', name: 'Matrix Shield', desc: 'Absorbs one mistake in next round', cost: 75, icon: Shield, color: '#60a5fa', effect: '1× mistake immunity' },
+  { id: 'hyper_drive', name: 'Hyper Drive', desc: '2× score multiplier for next game', cost: 100, icon: Rocket, color: '#f472b6', effect: '2× score multiplier' },
+  { id: 'time_warp', name: 'Time Warp', desc: 'Adds 30 bonus seconds to timed rounds', cost: 60, icon: Zap, color: '#34d399', effect: '+30s bonus time' },
+  { id: 'battery_boost', name: 'Battery Boost', desc: 'Full power restore for next session', cost: 40, icon: BatteryFull, color: '#a78bfa', effect: 'Full HP restore' },
+  { id: 'sparkle_lens', name: 'Sparkle Lens', desc: 'Reveals hidden star positions on board', cost: 120, icon: Sparkles, color: '#00ff41', effect: 'Reveal hidden stars' },
+];
 
 const NEXUS_DATA = {
   version: "15.0.0",
@@ -68,6 +78,13 @@ const App = () => {
   // Upgrade Layer 1 & 2: Audit & Telemetry
   const [auditLogs, setAuditLogs] = useState([]);
   const [telemetry, setTelemetry] = useState({ githubStatus: 'IDLE', syncActive: false, errorRate: 0 });
+
+  // Upgrade Layer 6: Store, Power-Ups & Multiplayer
+  const [credits, setCredits] = useState(100);
+  const [powerUps, setPowerUps] = useState({});
+  const [activePowerUps, setActivePowerUps] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   
   const terminalRef = useRef(null);
 
@@ -110,6 +127,55 @@ const App = () => {
     }, 3000);
   };
 
+  // --- UPGRADE 6A: STORE PURCHASE ---
+  const handleBuyItem = useCallback(async (item) => {
+    if (credits < item.cost) {
+      pushLog('ERROR', `Insufficient credits. Need ${item.cost} CR.`);
+      return;
+    }
+    const newCredits = credits - item.cost;
+    const newPowerUps = { ...powerUps, [item.id]: (powerUps[item.id] || 0) + 1 };
+    setCredits(newCredits);
+    setPowerUps(newPowerUps);
+    pushLog('SUCCESS', `Acquired: ${item.name}. Balance: ${newCredits} CR`);
+    if (user && !user.isAnonymous) {
+      try {
+        const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile');
+        await setDoc(userRef, { credits: newCredits, powerUps: newPowerUps }, { merge: true });
+      } catch (e) { console.error('Store sync failed', e); }
+    }
+  }, [credits, powerUps, user, pushLog]);
+
+  // --- UPGRADE 6B: POWER-UP ACTIVATION ---
+  const handleActivatePowerUp = useCallback((itemId) => {
+    if (!powerUps[itemId] || powerUps[itemId] < 1) return;
+    const item = STORE_ITEMS.find(i => i.id === itemId);
+    if (!item) return;
+    setActivePowerUps(prev => [...prev.filter(id => id !== itemId), itemId]);
+    setPowerUps(prev => {
+      const updated = { ...prev, [itemId]: prev[itemId] - 1 };
+      if (updated[itemId] === 0) delete updated[itemId];
+      return updated;
+    });
+    pushLog('SUCCESS', `Power-Up Active: ${item.name} — ${item.effect}`);
+  }, [powerUps, pushLog]);
+
+  // --- UPGRADE 6C: SSO LOGIN ---
+  const handleSSO = useCallback(async (providerType) => {
+    try {
+      const provider = providerType === 'google' ? googleProvider : githubProvider;
+      if (user && user.isAnonymous) {
+        await linkWithPopup(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
+      setIsLoginOpen(false);
+      pushLog('SUCCESS', `SSO verified via ${providerType.toUpperCase()}.`);
+    } catch (e) {
+      pushLog('ERROR', `SSO failed: ${e.code || e.message}`);
+    }
+  }, [user, pushLog]);
+
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -136,6 +202,8 @@ const App = () => {
             const data = snap.data();
             setRole(data.role || 'contributor');
             setAchievements(data.achievements || { gamesBeaten: 0, sponsored: false });
+            setCredits(data.credits ?? 100);
+            setPowerUps(data.powerUps || {});
           } else {
             setRole('contributor');
           }
@@ -159,13 +227,29 @@ const App = () => {
     }
   }, [achievements, pushLog]);
 
+  // --- LEADERBOARD SUBSCRIPTION ---
+  useEffect(() => {
+    const lbRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+    const q = query(lbRef, orderBy('score', 'desc'), limit(10));
+    const unsub = onSnapshot(q, (snap) => {
+      setLeaderboard(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (e) => console.error('Leaderboard error', e));
+    return () => unsub();
+  }, []);
+
   const handleCommand = (cmd) => {
     const input = cmd.toLowerCase().trim();
     setTermHistory(prev => [...prev, `> ${input}`]);
-    if (input === 'help') setTermHistory(prev => [...prev, "Cmds: status, telemetry, sync, resume, housing, arcade"]);
-    else if (input === 'telemetry') setView('telemetry');
+    if (input === 'help') {
+      setTermHistory(prev => [...prev, "Cmds: status, telemetry, sync, resume, store, multiplayer, login, credits, arcade, clear"]);
+    } else if (input === 'telemetry') setView('telemetry');
     else if (input === 'sync') triggerSync();
     else if (input === 'resume') setView('resume');
+    else if (input === 'store') setView('store');
+    else if (input === 'multiplayer' || input === 'mp') setView('multiplayer');
+    else if (input === 'login') setIsLoginOpen(true);
+    else if (input === 'credits') setTermHistory(prev => [...prev, `[INFO] Current balance: ${credits} CR`]);
+    else if (input === 'arcade' || input === 'game') window.open('https://nicholai.org/seven-stars.html', '_blank');
     else if (input === 'clear') setTermHistory(['[SYSTEM] Logs cleared.']);
     setTermInput('');
   };
@@ -205,6 +289,197 @@ const App = () => {
     </div>
   );
 
+  const StoreView = () => (
+    <div className="flex-1 p-8 overflow-y-auto custom-scroll animate-in space-y-6 pb-32">
+      <div className="flex items-center justify-between border-b border-white/10 pb-6">
+        <div className="flex items-center gap-4">
+          <ShoppingCart size={32} color="#00ff41" />
+          <h2 className="text-3xl font-black uppercase tracking-tighter">Power_Store</h2>
+        </div>
+        <div className="flex items-center gap-3 glass px-5 py-3 rounded-2xl border border-white/5">
+          <Star size={14} className="text-amber-400" />
+          <span className="text-xl font-black text-amber-400">{credits}</span>
+          <span className="text-[9px] font-black uppercase text-slate-500">Credits</span>
+        </div>
+      </div>
+
+      {activePowerUps.length > 0 && (
+        <div className="bg-[#00ff41]/5 border border-[#00ff41]/20 rounded-2xl p-4 flex flex-wrap gap-3">
+          <span className="text-[9px] font-black uppercase text-[#00ff41] w-full mb-1">Active Power-Ups</span>
+          {activePowerUps.map(id => {
+            const item = STORE_ITEMS.find(i => i.id === id);
+            if (!item) return null;
+            return (
+              <div key={id} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase animate-pulse" style={{ background: `${item.color}15`, border: `1px solid ${item.color}40`, color: item.color }}>
+                <item.icon size={10} /> {item.name}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {STORE_ITEMS.map(item => {
+          const owned = powerUps[item.id] || 0;
+          const canAfford = credits >= item.cost;
+          const isActive = activePowerUps.includes(item.id);
+          return (
+            <div key={item.id} className="glass rounded-3xl border border-white/5 p-6 space-y-4 hover:border-white/10 transition-all">
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `${item.color}20`, border: `1px solid ${item.color}40` }}>
+                  <item.icon size={22} style={{ color: item.color }} />
+                </div>
+                {owned > 0 && (
+                  <div className="px-2 py-1 rounded-lg text-[9px] font-black uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                    ×{owned} owned
+                  </div>
+                )}
+              </div>
+              <div>
+                <h3 className="font-black uppercase tracking-tight text-white text-sm">{item.name}</h3>
+                <p className="text-[9px] text-slate-500 mt-1 uppercase font-bold">{item.desc}</p>
+                <div className="mt-2 px-2 py-1 inline-block rounded text-[8px] font-black uppercase" style={{ background: `${item.color}15`, color: item.color }}>
+                  {item.effect}
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => handleBuyItem(item)}
+                  disabled={!canAfford}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all"
+                  style={canAfford ? { background: `${item.color}20`, border: `1px solid ${item.color}40`, color: item.color } : { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#475569' }}
+                >
+                  <Star size={10} /> {item.cost} CR
+                </button>
+                {owned > 0 && !isActive && (
+                  <button
+                    onClick={() => handleActivatePowerUp(item.id)}
+                    className="px-4 py-2.5 rounded-xl text-[9px] font-black uppercase bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                  >
+                    Equip
+                  </button>
+                )}
+                {isActive && (
+                  <div className="px-4 py-2.5 rounded-xl text-[9px] font-black uppercase text-emerald-400 border border-emerald-500/20 bg-emerald-500/10">
+                    Active
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {(!user || user.isAnonymous) && (
+        <div className="glass rounded-3xl border border-amber-500/20 p-6 text-center space-y-3">
+          <AlertTriangle size={24} className="mx-auto text-amber-500" />
+          <p className="text-[10px] font-black uppercase text-amber-400">Sign in to persist your inventory across sessions</p>
+          <button onClick={() => setIsLoginOpen(true)} className="px-6 py-2.5 rounded-xl text-[9px] font-black uppercase bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all">
+            Connect Account
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const submitScore = async () => {
+    if (!user || user.isAnonymous) { setIsLoginOpen(true); return; }
+    try {
+      const lbRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+      await addDoc(lbRef, {
+        name: user.displayName || user.email || 'Anonymous',
+        score: achievements.gamesBeaten * 1000,
+        powerUpsUsed: activePowerUps.length,
+        timestamp: serverTimestamp(),
+        uid: user.uid
+      });
+      pushLog('SUCCESS', 'Score submitted to leaderboard.');
+    } catch (e) { pushLog('ERROR', 'Failed to submit score.'); }
+  };
+
+  const MultiplayerView = () => (
+    <div className="flex-1 p-8 overflow-y-auto custom-scroll animate-in space-y-6 pb-32">
+      <div className="flex items-center justify-between border-b border-white/10 pb-6">
+        <div className="flex items-center gap-4">
+          <Users size={32} color="#00ff41" />
+          <h2 className="text-3xl font-black uppercase tracking-tighter">Multiplayer_Grid</h2>
+        </div>
+        {(!user || user.isAnonymous) ? (
+          <button onClick={() => setIsLoginOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all">
+            <LogIn size={12} /> Sign In
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <CheckCircle2 size={12} /> {user.displayName || user.email || 'Verified'}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard label="Your XP" val={`${achievements.gamesBeaten * 1000}`} color="text-[#00ff41]" />
+        <StatCard label="Power-Ups" val={Object.values(powerUps).reduce((a, b) => a + b, 0)} color="text-amber-400" />
+        <StatCard label="Active Buffs" val={activePowerUps.length} color="text-purple-400" />
+      </div>
+
+      <div className="bg-black/80 rounded-[2rem] border border-[#00ff41]/20 overflow-hidden">
+        <div className="p-5 border-b border-white/5 flex items-center gap-3 bg-black/40">
+          <Trophy size={16} className="text-amber-400" />
+          <span className="text-[10px] font-black uppercase">Global_Leaderboard</span>
+          <span className="ml-auto text-[9px] text-slate-600 uppercase font-bold">Live</span>
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        </div>
+        <div className="divide-y divide-white/5">
+          {leaderboard.length === 0 ? (
+            <div className="p-8 text-center space-y-3">
+              <Trophy size={32} className="mx-auto text-slate-700" />
+              <p className="text-[10px] font-black uppercase text-slate-600">No scores yet — be the first!</p>
+              <button onClick={submitScore} className="mt-2 px-5 py-2 rounded-xl text-[9px] font-black uppercase bg-[#00ff41]/10 border border-[#00ff41]/20 text-[#00ff41] hover:bg-[#00ff41]/20 transition-all">
+                Submit My Score
+              </button>
+            </div>
+          ) : (
+            leaderboard.map((entry, i) => (
+              <div key={entry.id} className="p-4 flex items-center gap-4 hover:bg-white/[0.02] transition-all">
+                <span className={`text-[10px] font-black w-6 ${i === 0 ? 'text-amber-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-orange-400' : 'text-slate-600'}`}>#{i + 1}</span>
+                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                  <User size={14} className="text-slate-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-black uppercase text-white truncate">{entry.name || 'Anonymous'}</p>
+                  <p className="text-[8px] font-bold uppercase text-slate-600">{entry.powerUpsUsed || 0} power-ups used</p>
+                </div>
+                <span className="font-black text-sm" style={{ color: i === 0 ? '#fbbf24' : '#00ff41' }}>{entry.score?.toLocaleString() || 0}</span>
+              </div>
+            ))
+          )}
+        </div>
+        {leaderboard.length > 0 && (
+          <div className="p-4 border-t border-white/5">
+            <button onClick={submitScore} className="w-full py-3 rounded-2xl text-[9px] font-black uppercase bg-[#00ff41]/10 border border-[#00ff41]/20 text-[#00ff41] hover:bg-[#00ff41]/20 transition-all">
+              <Trophy size={12} className="inline mr-2" /> Submit My Score
+            </button>
+          </div>
+        )}
+      </div>
+
+      {(!user || user.isAnonymous) && (
+        <div className="glass rounded-3xl border border-blue-500/20 p-8 text-center space-y-4">
+          <Users size={40} className="mx-auto text-blue-400" />
+          <h3 className="text-lg font-black uppercase tracking-tight text-white">Join the Multiplayer Grid</h3>
+          <p className="text-[9px] font-bold uppercase text-slate-500">Sign in to submit scores, appear on the leaderboard, and challenge other players</p>
+          <div className="flex gap-3 justify-center">
+            <button onClick={() => handleSSO('google')} className="flex items-center gap-2 px-5 py-3 rounded-2xl text-[9px] font-black uppercase bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+              <User size={12} /> Google
+            </button>
+            <button onClick={() => handleSSO('github')} className="flex items-center gap-2 px-5 py-3 rounded-2xl text-[9px] font-black uppercase bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+              <Github size={12} /> GitHub
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className={`fixed inset-0 flex flex-col font-sans overflow-hidden transition-all duration-500`} 
          style={{ backgroundColor: isMatrixMode ? '#030a03' : '#020617', color: isMatrixMode ? '#00ff41' : '#94a3b8' }}>
@@ -216,6 +491,45 @@ const App = () => {
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .glass { background: rgba(0,0,0,0.4); backdrop-filter: blur(12px); }
       `}</style>
+
+      {/* SSO LOGIN MODAL */}
+      {isLoginOpen && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center animate-in">
+          <div className="absolute inset-0 bg-black/90" onClick={() => setIsLoginOpen(false)} />
+          <div className="relative w-80 glass rounded-[2.5rem] border border-white/10 p-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-black uppercase tracking-tighter text-white">Connect_Identity</h3>
+                <p className="text-[9px] font-bold uppercase text-slate-500 mt-1">SSO Authentication</p>
+              </div>
+              <button onClick={() => setIsLoginOpen(false)} className="p-2 rounded-xl hover:bg-white/5 transition-all">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => handleSSO('google')}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-sm text-white"
+              >
+                <div className="w-8 h-8 rounded-xl bg-red-500/20 flex items-center justify-center">
+                  <User size={16} className="text-red-400" />
+                </div>
+                Sign in with Google
+              </button>
+              <button
+                onClick={() => handleSSO('github')}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold text-sm text-white"
+              >
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <Github size={16} className="text-purple-400" />
+                </div>
+                Sign in with GitHub
+              </button>
+            </div>
+            <p className="text-[8px] font-bold uppercase text-slate-600 text-center">Secure handshake via Firebase Auth v15</p>
+          </div>
+        </div>
+      )}
 
       {/* NAV */}
       <nav className="h-16 border-b flex items-center justify-between px-6 z-[100] glass" style={{ borderColor: isMatrixMode ? '#00ff4140' : 'rgba(255,255,255,0.05)' }}>
@@ -229,8 +543,21 @@ const App = () => {
              </div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
            {telemetry.syncActive && <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500 animate-ping"/><span className="text-[8px] font-black uppercase text-amber-500">Sync_Active</span></div>}
+           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5">
+             <Star size={10} className="text-amber-400" />
+             <span className="text-[9px] font-black text-amber-400">{credits} CR</span>
+           </div>
+           {(!user || user.isAnonymous) ? (
+             <button onClick={() => setIsLoginOpen(true)} className="px-3 py-1.5 border rounded-full text-[9px] font-black uppercase flex items-center gap-1.5 hover:bg-white/5 transition-all" style={{ borderColor: '#334' }}>
+               <LogIn size={12} /> Login
+             </button>
+           ) : (
+             <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+               <User size={14} className="text-emerald-400" />
+             </div>
+           )}
            <button onClick={() => setIsMatrixMode(!isMatrixMode)} className="px-3 py-1.5 border rounded-full text-[9px] font-black uppercase" style={{ borderColor: isMatrixMode ? '#00ff41' : '#333' }}>
              {isMatrixMode ? <ToggleRight size={14} /> : <ToggleLeft size={14} />} Matrix
            </button>
@@ -244,12 +571,14 @@ const App = () => {
            <div className="relative w-72 h-full bg-[#030a03] border-r border-[#00ff41]/20 p-8 flex flex-col space-y-8">
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">Nexus OS Hub</span>
               <div className="space-y-4">
-                <SideLink icon={Activity} label="OS Telemetry" onClick={() => setView('telemetry')} active={view === 'telemetry'} />
-                <SideLink icon={FileText} label="Master Shard" onClick={() => setView('resume')} active={view === 'resume'} />
-                <SideLink icon={TerminalSquare} label="OS Terminal" onClick={() => setView('terminal')} active={view === 'terminal'} />
-                <SideLink icon={UploadCloud} label="Broadcast Sync" onClick={triggerSync} />
+                <SideLink icon={Activity} label="OS Telemetry" onClick={() => { setView('telemetry'); setIsSidebarOpen(false); }} active={view === 'telemetry'} />
+                <SideLink icon={ShoppingCart} label="Power Store" onClick={() => { setView('store'); setIsSidebarOpen(false); }} active={view === 'store'} />
+                <SideLink icon={Users} label="Multiplayer" onClick={() => { setView('multiplayer'); setIsSidebarOpen(false); }} active={view === 'multiplayer'} />
+                <SideLink icon={FileText} label="Master Shard" onClick={() => { setView('resume'); setIsSidebarOpen(false); }} active={view === 'resume'} />
+                <SideLink icon={TerminalSquare} label="OS Terminal" onClick={() => { setView('terminal'); setIsSidebarOpen(false); }} active={view === 'terminal'} />
+                <SideLink icon={UploadCloud} label="Broadcast Sync" onClick={() => { triggerSync(); setIsSidebarOpen(false); }} />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600 pt-8">External Origins</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600 pt-4">External Origins</span>
               <div className="space-y-4">
                  <a href="https://AmazingGraceHomeLiving.com" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-slate-400 hover:text-emerald-400 transition-all font-bold text-sm">
                     <Home size={18} /> Housing Matrix
@@ -258,6 +587,11 @@ const App = () => {
                     <Star size={18} /> Seven Stars
                  </a>
               </div>
+              {(!user || user.isAnonymous) && (
+                <button onClick={() => { setIsLoginOpen(true); setIsSidebarOpen(false); }} className="mt-auto flex items-center gap-3 p-4 rounded-2xl text-slate-400 hover:bg-white/5 transition-all font-bold text-sm">
+                  <LogIn size={18} /> Sign In
+                </button>
+              )}
            </div>
         </div>
       )}
@@ -265,7 +599,7 @@ const App = () => {
       {/* MAIN */}
       <main className="flex-1 relative flex overflow-hidden">
         {view === 'overworld' && (
-          <div className="flex-1 flex flex-col items-center justify-center p-4 animate-in">
+          <div className="flex-1 flex flex-col items-center justify-center p-4 animate-in gap-4">
              <div className="relative w-full max-w-lg aspect-square rounded-[3rem] border border-[#00ff41]/20 flex items-center justify-center overflow-hidden transition-all shadow-[0_0_50px_rgba(0,255,65,0.05)]">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `radial-gradient(#00ff41 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
                 {NEXUS_DATA.nodes.map(node => (
@@ -278,10 +612,25 @@ const App = () => {
                    </div>
                 ))}
              </div>
+             {activePowerUps.length > 0 && (
+               <div className="flex flex-wrap gap-2 justify-center max-w-lg">
+                 {activePowerUps.map(id => {
+                   const item = STORE_ITEMS.find(i => i.id === id);
+                   if (!item) return null;
+                   return (
+                     <div key={id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[8px] font-black uppercase animate-pulse" style={{ background: `${item.color}15`, border: `1px solid ${item.color}30`, color: item.color }}>
+                       <item.icon size={9} /> {item.name}
+                     </div>
+                   );
+                 })}
+               </div>
+             )}
           </div>
         )}
 
         {view === 'telemetry' && <TelemetryView />}
+        {view === 'store' && <StoreView />}
+        {view === 'multiplayer' && <MultiplayerView />}
 
         {view === 'resume' && (
            <div className="flex-1 p-8 flex flex-col items-center justify-center animate-in pb-32">
@@ -324,7 +673,8 @@ const App = () => {
       {/* DOCK */}
       <div className="fixed bottom-0 inset-x-0 h-24 border-t flex items-center justify-around px-4 z-[100] pb-6 glass" style={{ borderColor: isMatrixMode ? '#00ff4140' : 'rgba(255,255,255,0.05)' }}>
         <NavBtn active={view === 'overworld'} icon={MapPin} label="Map" onClick={() => setView('overworld')} />
-        <NavBtn active={view === 'telemetry'} icon={Activity} label="Logs" onClick={() => setView('telemetry')} />
+        <NavBtn active={view === 'store'} icon={ShoppingCart} label="Store" onClick={() => setView('store')} />
+        <NavBtn active={view === 'multiplayer'} icon={Users} label="Arena" onClick={() => setView('multiplayer')} />
         <NavBtn active={view === 'resume'} icon={FileText} label="Shard" onClick={() => setView('resume')} />
         <NavBtn active={view === 'terminal'} icon={TermIcon} label="Term" onClick={() => setView('terminal')} />
       </div>
