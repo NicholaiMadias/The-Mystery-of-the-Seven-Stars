@@ -120,7 +120,7 @@ const App = () => {
         }
       } catch (e) {
         console.error('[AUTH] Sign-in failed:', e);
-        pushLog('ERROR', `Auth failed: ${e.message}`);
+        pushLog('ERROR', 'Authentication initialization failed.');
       }
     };
     initAuth();
@@ -141,7 +141,7 @@ const App = () => {
           }
         } catch (e) {
           console.error('[AUTH] Profile fetch failed:', e);
-          pushLog('ERROR', `Profile fetch failed: ${e.message}`);
+          pushLog('ERROR', 'Unable to load user profile.');
         }
         pushLog('SUCCESS', `Authenticated as ${u.email || 'Verified User'}`);
       }
