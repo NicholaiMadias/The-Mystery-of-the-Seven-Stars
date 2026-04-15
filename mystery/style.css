@@ -11,7 +11,7 @@
     height: 360px;
     margin: 20px auto;
     padding: 15px;
-    background: url('../assets/starfield_bg.jpg') no-repeat center; /* Optional BG */
+    background: url('assets/starfield_bg.jpg') no-repeat center; /* Optional BG */
     background-size: cover;
     border: 2px solid var(--gold);
     box-shadow: 0 0 20px var(--nebula);
