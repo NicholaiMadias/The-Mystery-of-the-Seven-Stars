@@ -1,0 +1,69 @@
+/* ============================================================
+   Nexus OS — Global Styles
+   Extends Tailwind base. Import this file in main.jsx or
+   index.css alongside the Tailwind directives.
+   ============================================================ */
+
+/* Custom scrollbar (Webkit) */
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #00ff41;
+  border-radius: 10px;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* View entrance animation */
+.animate-in {
+  animation: nexus-fade-in 0.4s ease-out both;
+}
+
+@keyframes nexus-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Matrix-mode scanline overlay */
+.matrix-scanlines::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 65, 0.015) 2px,
+    rgba(0, 255, 65, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Pulse glow for active nodes */
+@keyframes node-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(0, 255, 65, 0.7);
+  }
+}
+.node-glow {
+  animation: node-glow 2.4s ease-in-out infinite;
+}
