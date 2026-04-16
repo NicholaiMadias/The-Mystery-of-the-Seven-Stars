@@ -1,0 +1,37 @@
+{
+  "name": "Nexus OS — Nicholai Maro Madias",
+  "short_name": "Nexus OS",
+  "description": "Nexus OS v15 — Divine Revelation. A software engineer's personal operating system and portfolio hub.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030a03",
+  "theme_color": "#00ff41",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/assets/icons/blackwood.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/wisdom.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "OS Terminal",
+      "url": "/?view=terminal",
+      "description": "Open the Nexus terminal"
+    },
+    {
+      "name": "Seven Stars Arcade",
+      "url": "https://nicholai.org/seven-stars.html",
+      "description": "Play Seven Stars"
+    }
+  ]
+}
