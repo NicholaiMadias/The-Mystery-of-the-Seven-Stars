@@ -1,50 +1,360 @@
+/* ===== The Mystery of the Seven Stars  Arcade Theme ===== */
+/* CSS Custom Properties */
 :root {
-    --gold: #ffd700;
-    --nebula: rgba(74, 35, 90, 0.8);
+      --void:    #0b0e17;
+      --deep:    #111827;
+      --gold:    #f5c842;
+      --nebula:  #7c3aed;
+      --silver:  #94a3b8;
+      --star-blue:   #38bdf8;
+      --star-red:    #ef4444;
+      --star-purple: #a855f7;
+      --star-green:  #22c55e;
+      --radius:  8px;
+      --font-display: 'Cinzel', serif;
+      --font-body:    'Inter', system-ui, sans-serif;
 }
 
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+      font-family: var(--font-body);
+      background: var(--void);
+      color: var(--silver);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.6;
+}
+
+/* ===== Skip Link (a11y) ===== */
+.skip-link {
+      position: absolute;
+      top: -100%;
+      left: 0;
+      background: var(--gold);
+      color: var(--void);
+      padding: 0.5rem 1rem;
+      z-index: 1000;
+      font-weight: 700;
+      transition: top 0.2s;
+}
+.skip-link:focus { top: 0; }
+
+/* ===== HUD  Top Status Bar ===== */
+.hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      background: var(--deep);
+      border-bottom: 2px solid var(--gold);
+      font-family: var(--font-display);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+}
+
+.hud-title {
+      font-size: 1.25rem;
+      color: var(--gold);
+      text-shadow: 0 0 12px rgba(245, 200, 66, 0.5);
+      letter-spacing: 0.05em;
+}
+
+.hud-stats {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.9rem;
+}
+
+.hud-stats span {
+      color: var(--silver);
+}
+
+.hud-stats .value {
+      color: var(--gold);
+      font-weight: 700;
+}
+
+/* ===== Main Stage ===== */
+main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+}
+
+/* ===== Match Board Grid ===== */
 #match-board {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    width: 360px;
-    height: 360px;
-    margin: 20px auto;
-    padding: 15px;
-    background: url('assets/starfield_bg.jpg') no-repeat center; /* Optional BG */
-    background-size: cover;
-    border: 2px solid var(--gold);
-    box-shadow: 0 0 20px var(--nebula);
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      width: min(360px, 90vw);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      padding: 15px;
+      background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.15), transparent 70%);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius);
+      box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
 }
 
+/* ===== Star Tiles ===== */
 .square {
-    width: 50px;
-    height: 50px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      width: 100%;
+      aspect-ratio: 1;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                        filter 0.2s ease;
 }
 
 .square:hover {
-    transform: scale(1.15);
-    filter: brightness(1.2);
+      transform: scale(1.15);
+      filter: brightness(1.3);
 }
 
-/* Specific Classes for your Uploaded Star Assets */
-.star-gold { background-image: url('assets/star_crystal_gold.png'); }
-.star-blue { background-image: url('assets/star_crystal_blue.png'); }
-.star-purple { background-image: url('assets/star_crystal_purple.png'); }
-.star-red { background-image: url('assets/star_crystal_red.png'); }
+.square:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+}
 
-/* Animation for a Match */
+.square.selected {
+      transform: scale(1.1);
+      filter: brightness(1.4) drop-shadow(0 0 6px var(--gold));
+}
+
+/* Star Variants */
+.star-gold   { background-image: url('assets/star_crystal_gold.png'); }
+.star-blue   { background-image: url('assets/star_crystal_blue.png'); }
+.star-purple { background-image: url('assets/star_crystal_purple.png'); }
+.star-red    { background-image: url('assets/star_crystal_red.png'); }
+.star-green  { background-image: url('assets/star_crystal_green.png'); }
+
+/* ===== Match Animation ===== */
 .match-explode {
-    animation: supernova 0.5s forwards;
-    background-image: url('assets/supernova_explosion.png') !important;
+      animation: supernova 0.5s forwards;
+      background-image: url('assets/supernova_explosion.png') !important;
 }
 
 @keyframes supernova {
-    0% { transform: scale(1); opacity: 1; }
-    100% { transform: scale(2); opacity: 0; }
+      0%   { transform: scale(1);   opacity: 1; }
+      60%  { transform: scale(1.8); opacity: 0.6; }
+      100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 8px var(--gold); }
+      50%      { box-shadow: 0 0 20px var(--gold); }
+}
+
+/* ===== New Game Button ===== */
+#new-game-btn {
+      margin-top: 1.5rem;
+      padding: 0.75rem 2rem;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--void);
+      background: var(--gold);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+#new-game-btn:hover {
+      background: #ffd866;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(245, 200, 66, 0.4);
+}
+
+#new-game-btn:active {
+      transform: translateY(0);
+}
+
+#new-game-btn:focus-visible {
+      outline: 2px solid var(--star-blue);
+      outline-offset: 3px;
+}
+
+/* ===== Live Region (screen reader announcements) ===== */
+#game-status {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      min-height: 1.5em;
+      text-align: center;
+      color: var(--star-blue);
+}
+
+/* ===== Footer ===== */
+footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.8rem;
+      color: var(--silver);
+      border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+footer a {
+      color: var(--gold);
+      text-decoration: none;
+}
+footer a:hover { text-decoration: underline; }
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+      .hud {
+              flex-direction: column;
+              text-align: center;
+              padding: 0.5rem 1rem;
+      }
+      .hud-stats { gap: 0.75rem; font-size: 0.8rem; }
+      #match-board { padding: 10px; gap: 5px; }
+      .square { border-radius: 3px; }
+      #new-game-btn { font-size: 0.9rem; padding: 0.6rem 1.5rem; }
+}
+/* ===== The Mystery of the Seven Stars — Arcade Theme ===== */
+:root {
+  --void: #0b0e17;
+  --deep: #111827;
+  --gold: #f5c842;
+  --nebula: #7c3aed;
+  --silver: #94a3b8;
+  --star-blue: #38bdf8;
+  --star-red: #ef4444;
+  --star-purple: #a855f7;
+  --star-green: #22c55e;
+  --radius: 8px;
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--void);
+  color: var(--silver);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+.skip-link {
+  position: absolute; top: -100%; left: 0;
+  background: var(--gold); color: var(--void);
+  padding: 0.5rem 1rem; z-index: 1000; font-weight: 700;
+}
+.skip-link:focus { top: 0; }
+
+.hud {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.75rem 1.5rem; background: var(--deep);
+  border-bottom: 2px solid var(--gold);
+  font-family: var(--font-display); flex-wrap: wrap; gap: 0.5rem;
+}
+.hud-title {
+  font-size: 1.25rem; color: var(--gold);
+  text-shadow: 0 0 12px rgba(245,200,66,0.5); letter-spacing: 0.05em;
+}
+.hud-stats { display: flex; gap: 1.5rem; font-size: 0.9rem; }
+.hud-stats span { color: var(--silver); }
+.hud-stats .value { color: var(--gold); font-weight: 700; }
+
+main {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 2rem 1rem;
+}
+
+#match-board {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  width: min(360px, 90vw); aspect-ratio: 1; margin: 0 auto; padding: 15px;
+  background: radial-gradient(ellipse at center, rgba(124,58,237,0.15), transparent 70%);
+  border: 2px solid var(--gold); border-radius: var(--radius);
+  box-shadow: 0 0 30px rgba(124,58,237,0.3);
+}
+
+.square {
+  width: 100%; aspect-ratio: 1;
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  cursor: pointer; border-radius: 4px;
+  transition: transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275), filter 0.2s ease;
+}
+.square:hover { transform: scale(1.15); filter: brightness(1.3); }
+.square:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.square.selected { transform: scale(1.1); filter: brightness(1.4) drop-shadow(0 0 6px var(--gold)); }
+
+.star-gold   { background-image: url('assets/star_crystal_gold.png'); }
+.star-blue   { background-image: url('assets/star_crystal_blue.png'); }
+.star-purple { background-image: url('assets/star_crystal_purple.png'); }
+.star-red    { background-image: url('assets/star_crystal_red.png'); }
+.star-green  { background-image: url('assets/star_crystal_green.png'); }
+
+.match-explode {
+  animation: supernova 0.5s forwards;
+  background-image: url('assets/supernova_explosion.png') !important;
+}
+@keyframes supernova {
+  0%   { transform: scale(1); opacity: 1; }
+  60%  { transform: scale(1.8); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+#new-game-btn {
+  margin-top: 1.5rem; padding: 0.75rem 2rem;
+  font-family: var(--font-display); font-size: 1rem;
+  color: var(--void); background: var(--gold); border: none;
+  border-radius: var(--radius); cursor: pointer;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+#new-game-btn:hover { background: #ffd866; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(245,200,66,0.4); }
+#new-game-btn:active { transform: translateY(0); }
+#new-game-btn:focus-visible { outline: 2px solid var(--star-blue); outline-offset: 3px; }
+
+#game-status { margin-top: 1rem; font-size: 0.95rem; min-height: 1.5em; text-align: center; color: var(--star-blue); }
+
+footer { text-align: center; padding: 1rem; font-size: 0.8rem; color: var(--silver); border-top: 1px solid rgba(148,163,184,0.15); }
+footer a { color: var(--gold); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+  .hud { flex-direction: column; text-align: center; padding: 0.5rem 1rem; }
+  .hud-stats { gap: 0.75rem; font-size: 0.8rem; }
+  #match-board { padding: 10px; gap: 5px; }
+  #new-game-btn { font-size: 0.9rem; padding: 0.6rem 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+@media (forced-colors: active) {
+  .square { border: 1px solid ButtonText; }
+  #new-game-btn { border: 2px solid ButtonText; }
+}
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+              animation-duration: 0.01ms !important;
+              transition-duration: 0.01ms !important;
+      }
+}
+
+/* ===== High Contrast Support ===== */
+@media (forced-colors: active) {
+      .square { border: 1px solid ButtonText; }
+      #new-game-btn { border: 2px solid ButtonText; }
 }
