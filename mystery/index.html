@@ -1,17 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mystery of the Seven Stars</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>Star Match</h1>
-    <p>Score: <span id="score">0</span></p>
-    <div id="match-board"></div>
-    <p id="msg"></p>
-    <button id="solve-btn" style="display:none;">Solve Mystery</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="The Mystery of the Seven Stars — An arcade puzzle where you align celestial stars to unlock cosmic secrets." />
+    <meta name="theme-color" content="#0b0e2a" />
+    <title>Mystery of the Seven Stars</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main id="game-container">
+      <header>
+        <h1>&#x2728; Mystery of the Seven Stars</h1>
+        <div id="hud" role="status" aria-live="polite">
+          <span>Score: <strong id="score">0</strong></span>
+          <span>Level: <strong id="level">1</strong></span>
+          <span>Moves: <strong id="moves">30</strong></span>
+        </div>
+      </header>
+      <div id="match-board" role="grid" aria-label="Puzzle board"></div>
+      <p id="msg" aria-live="assertive"></p>
+      <div id="controls">
+        <button id="new-game-btn" type="button">New Game</button>
+      </div>
+    </main>
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
