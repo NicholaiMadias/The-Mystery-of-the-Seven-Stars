@@ -22,12 +22,13 @@ const STAR_TYPES  = [
 
 /* ── Game State ── */
 const state = {
-  board     : [],
-  score     : 0,
-  moves     : 0,
-  selected  : null,
-  locked    : false,
-  running   : false
+  board      : [],
+  score      : 0,
+  moves      : 0,
+  selected   : null,
+  locked     : false,
+  running    : false,
+  focusIndex : 0
 };
 
 /* ── DOM References ── */
@@ -72,7 +73,7 @@ function renderBoard() {
     cell.dataset.index = i;
     cell.setAttribute('role', 'gridcell');
     cell.setAttribute('aria-label', star.label + ', position ' + (i + 1));
-    cell.setAttribute('tabindex', i === 0 ? '0' : '-1');
+    cell.setAttribute('tabindex', i === state.focusIndex ? '0' : '-1');
     cell.addEventListener('click', function () { onCellClick(i); });
     cell.addEventListener('keydown', function (e) { onCellKey(e, i); });
     dom.board.appendChild(cell);
@@ -188,20 +189,21 @@ function swapCells(a, b) {
 
 function attemptSwap(a, b) {
   if (state.locked) return;
+
   swapCells(a, b);
   state.moves++;
   updateHUD();
+  renderBoard(); // show the attempted swap
 
   var matched = findMatches();
   if (matched.size > 0) {
-    renderBoard();
     processCascades();
   } else {
     swapCells(a, b);
+    renderBoard(); // revert visually immediately
     showMessage('No match - try again');
     setTimeout(function () { showMessage(''); }, 1200);
   }
-  renderBoard();
 }
 
 /* ── Input Handlers ── */
@@ -246,6 +248,7 @@ function onCellKey(e, index) {
 
   if (target >= 0) {
     e.preventDefault();
+    state.focusIndex = target;
     dom.board.querySelectorAll('.square')[target].focus();
   }
 }
@@ -290,11 +293,12 @@ function seedBoard() {
 
 /* ── New Game ── */
 function startGame() {
-  state.score    = 0;
-  state.moves    = 0;
-  state.selected = null;
-  state.locked   = false;
-  state.running  = true;
+  state.score      = 0;
+  state.moves      = 0;
+  state.selected   = null;
+  state.locked     = false;
+  state.running    = true;
+  state.focusIndex = 0;
   seedBoard();
   renderBoard();
   updateHUD();
