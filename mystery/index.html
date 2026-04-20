@@ -9,20 +9,64 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <a class="skip-link" href="#match-board">Skip to puzzle board</a>
+    <div class="parallax parallax-1"></div>
+    <div class="parallax parallax-2"></div>
     <main id="game-container">
-      <header>
-        <h1>&#x2728; Mystery of the Seven Stars</h1>
-        <div id="hud" role="status" aria-live="polite">
-          <span>Score: <strong id="score">0</strong></span>
-          <span>Level: <strong id="level">1</strong></span>
-          <span>Moves: <strong id="moves">30</strong></span>
+      <header class="hud" role="banner">
+        <div class="hud-heading">
+          <h1>&#x2728; Mystery of the Seven Stars</h1>
+          <p class="subtitle">Earn stars, fuse knowledge, unlock the Green Zone.</p>
+        </div>
+        <div class="hud-stats" role="status" aria-live="polite">
+          <div class="pill">
+            <span>Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="pill">
+            <span>Level</span>
+            <strong id="level">1</strong>
+          </div>
+          <div class="pill">
+            <span>Streak</span>
+            <strong id="streak">0</strong>
+          </div>
+          <div class="pill">
+            <span>Moves</span>
+            <strong id="moves">30</strong>
+          </div>
+          <div class="pill fusion">
+            <span>Fusion</span>
+            <div class="meter" aria-hidden="true">
+              <span id="fusion-fill"></span>
+            </div>
+            <small id="fusion-status">Collect yellow + blue</small>
+          </div>
+        </div>
+        <div class="hud-actions">
+          <button id="hint-btn" type="button">Angel Guide</button>
+          <button id="new-game-btn" type="button">New Game</button>
         </div>
       </header>
-      <div id="match-board" role="grid" aria-label="Puzzle board"></div>
+
+      <section class="board-shell">
+        <div id="effect-layer" aria-hidden="true"></div>
+        <div id="match-board" role="grid" aria-label="Puzzle board"></div>
+        <div id="supernova" aria-hidden="true"></div>
+      </section>
+
+      <section class="guide">
+        <div class="guide-avatar">
+          <img src="assets/characters/angel_guide.svg" alt="Artificial Angel Guide" />
+          <span class="pulse"></span>
+        </div>
+        <div class="guide-copy">
+          <h2>Artificial Angel Guide</h2>
+          <p id="guide-text">If you stall, I’ll light the path with a shooting star.</p>
+        </div>
+      </section>
+
       <p id="msg" aria-live="assertive"></p>
-      <div id="controls">
-        <button id="new-game-btn" type="button">New Game</button>
-      </div>
     </main>
     <script src="script.js"></script>
   </body>

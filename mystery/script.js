@@ -5,46 +5,85 @@
  */
 
 /* ── Constants ── */
-const GRID_SIZE   = 6;
-const CELL_COUNT  = GRID_SIZE * GRID_SIZE;
-const MATCH_MIN   = 3;
-const SCORE_PER   = 250;
-const WIN_SCORE   = 5000;
-const STAR_TYPES  = [
-  { cls: 'star-gold',   label: 'Gold Star'   },
-  { cls: 'star-blue',   label: 'Blue Star'   },
-  { cls: 'star-purple', label: 'Purple Star' },
-  { cls: 'star-red',    label: 'Red Star'    },
-  { cls: 'star-green',  label: 'Green Star'  },
-  { cls: 'star-silver', label: 'Silver Star' },
-  { cls: 'star-cosmic', label: 'Cosmic Star' }
+const GRID_SIZE  = 6;
+const CELL_COUNT = GRID_SIZE * GRID_SIZE;
+const MATCH_MIN  = 3;
+const SCORE_PER  = 250;
+const WIN_SCORE  = 5200;
+const FUSION_GOAL = 3;
+
+const STAR_LIBRARY = {
+  yellow   : { id: 'yellow',    cls: 'star-yellow',    label: 'Chibi Star' },
+  bronze   : { id: 'bronze',    cls: 'star-bronze',    label: 'Bronze Star' },
+  silver   : { id: 'silver',    cls: 'star-silver',    label: 'Silver Star' },
+  gold     : { id: 'gold',      cls: 'star-gold',      label: 'Gold Star' },
+  blue     : { id: 'blue',      cls: 'star-blue',      label: 'Blue Star' },
+  purple   : { id: 'purple',    cls: 'star-purple',    label: 'Purple Star' },
+  green    : { id: 'green',     cls: 'star-green',     label: 'Fusion Green Star' },
+  blackhole: { id: 'blackhole', cls: 'star-blackhole', label: 'Locked Star', locked: true }
+};
+
+const LEVELS = [
+  { level: 1, pool: ['yellow', 'bronze', 'silver'], lockedChance: 0 },
+  { level: 2, pool: ['yellow', 'silver', 'gold', 'blue'], lockedChance: 0.05 },
+  { level: 3, pool: ['yellow', 'gold', 'blue', 'purple'], lockedChance: 0.08 },
+  { level: 4, pool: ['yellow', 'blue', 'purple', 'gold'], lockedChance: 0.1 }
 ];
+const LEVEL_THRESHOLDS = [0, 1500, 3000, 4200, WIN_SCORE];
 
 /* ── Game State ── */
 const state = {
   board      : [],
   score      : 0,
   moves      : 0,
+  level      : 1,
+  streak     : 0,
+  fusion     : { yellow: 0, blue: 0, ready: false },
   selected   : null,
   locked     : false,
   running    : false,
-  focusIndex : 0
+  focusIndex : 0,
+  lastMoveAt : Date.now()
 };
 
 /* ── DOM References ── */
 const dom = {};
 
 function cacheDom() {
-  dom.board   = document.getElementById('match-board');
-  dom.score   = document.getElementById('score');
-  dom.moves   = document.getElementById('moves');
-  dom.msg     = document.getElementById('msg');
-  dom.newGame = document.getElementById('new-game-btn');
+  dom.board        = document.getElementById('match-board');
+  dom.score        = document.getElementById('score');
+  dom.moves        = document.getElementById('moves');
+  dom.level        = document.getElementById('level');
+  dom.streak       = document.getElementById('streak');
+  dom.msg          = document.getElementById('msg');
+  dom.newGame      = document.getElementById('new-game-btn');
+  dom.hint         = document.getElementById('hint-btn');
+  dom.fusionFill   = document.getElementById('fusion-fill');
+  dom.fusionStatus = document.getElementById('fusion-status');
+  dom.effects      = document.getElementById('effect-layer');
+  dom.supernova    = document.getElementById('supernova');
+  dom.guideText    = document.getElementById('guide-text');
 }
 
 /* ── Utilities ── */
-function randomType() {
-  return STAR_TYPES[Math.floor(Math.random() * STAR_TYPES.length)];
+function currentLevelConfig() {
+  var idx = Math.min(state.level - 1, LEVELS.length - 1);
+  return LEVELS[idx];
+}
+
+function randomType(options) {
+  var cfg = currentLevelConfig();
+  var allowLocked = options && options.allowLocked !== false;
+  var pool = cfg.pool.slice();
+
+  if (state.fusion.ready && pool.indexOf('green') === -1) pool.push('green');
+
+  if (allowLocked && cfg.lockedChance && Math.random() < cfg.lockedChance) {
+    return STAR_LIBRARY.blackhole;
+  }
+
+  var choice = pool[Math.floor(Math.random() * pool.length)];
+  return STAR_LIBRARY[choice];
 }
 
 function toRowCol(index) {
@@ -53,6 +92,12 @@ function toRowCol(index) {
 
 function toIndex(row, col) {
   return row * GRID_SIZE + col;
+}
+
+function fusionProgress() {
+  var y = Math.min(state.fusion.yellow, FUSION_GOAL) / FUSION_GOAL;
+  var b = Math.min(state.fusion.blue, FUSION_GOAL) / FUSION_GOAL;
+  return (y + b) / 2;
 }
 
 function areNeighbors(a, b) {
@@ -69,10 +114,10 @@ function renderBoard() {
 
   state.board.forEach(function (star, i) {
     var cell = document.createElement('button');
-    cell.className     = 'square ' + star.cls;
+    cell.className     = 'square ' + star.cls + (star.locked ? ' locked' : '');
     cell.dataset.index = i;
     cell.setAttribute('role', 'gridcell');
-    cell.setAttribute('aria-label', star.label + ', position ' + (i + 1));
+    cell.setAttribute('aria-label', star.label + (star.locked ? ' (locked)' : '') + ', position ' + (i + 1));
     cell.setAttribute('tabindex', i === state.focusIndex ? '0' : '-1');
     cell.addEventListener('click', function () { onCellClick(i); });
     cell.addEventListener('keydown', function (e) { onCellKey(e, i); });
@@ -84,6 +129,19 @@ function renderBoard() {
 function updateHUD() {
   if (dom.score) dom.score.textContent = state.score;
   if (dom.moves) dom.moves.textContent = state.moves;
+  if (dom.level) dom.level.textContent = state.level;
+  if (dom.streak) dom.streak.textContent = state.streak;
+  if (dom.fusionFill) {
+    var pct = fusionProgress() * 100;
+    dom.fusionFill.style.width = Math.min(100, pct) + '%';
+  }
+  if (dom.fusionStatus) {
+    var y = Math.min(state.fusion.yellow, FUSION_GOAL);
+    var b = Math.min(state.fusion.blue, FUSION_GOAL);
+    dom.fusionStatus.textContent = state.fusion.ready ?
+      'Fusion ready — Green Star live' :
+      'Collect yellow (' + y + '/' + FUSION_GOAL + ') + blue (' + b + '/' + FUSION_GOAL + ')';
+  }
 }
 
 function showMessage(text) {
@@ -91,6 +149,36 @@ function showMessage(text) {
     dom.msg.textContent = text;
     dom.msg.setAttribute('aria-live', 'polite');
   }
+}
+
+function launchShootingStar(index) {
+  if (!dom.board || !dom.effects || !dom.score) return;
+  var cell = dom.board.querySelector('[data-index="' + index + '"]');
+  if (!cell) return;
+  var start = cell.getBoundingClientRect();
+  var target = dom.score.getBoundingClientRect();
+  var star = document.createElement('div');
+  star.className = 'shooting-star';
+  var sx = start.left + start.width / 2;
+  var sy = start.top + start.height / 2;
+  var dx = (target.left + target.width / 2) - sx;
+  var dy = (target.top + target.height / 2) - sy;
+  star.style.left = sx + 'px';
+  star.style.top  = sy + 'px';
+  star.style.setProperty('--dx', dx + 'px');
+  star.style.setProperty('--dy', dy + 'px');
+  dom.effects.appendChild(star);
+  setTimeout(function () {
+    if (star.parentNode) star.parentNode.removeChild(star);
+  }, 800);
+}
+
+function triggerSupernova() {
+  if (!dom.supernova) return;
+  dom.supernova.classList.remove('active');
+  // force reflow to restart animation
+  void dom.supernova.offsetWidth;
+  dom.supernova.classList.add('active');
 }
 
 /* ── Match Detection ── */
@@ -133,6 +221,7 @@ function findMatches() {
 
 /* ── Board Collapse & Refill ── */
 function clearAndRefill(matched) {
+  if (!dom.board) return Promise.resolve();
   var cells = dom.board.querySelectorAll('.square');
   matched.forEach(function (idx) { cells[idx].classList.add('match-explode'); });
 
@@ -159,18 +248,24 @@ function clearAndRefill(matched) {
 }
 
 /* ── Cascade Loop ── */
-function processCascades() {
+function processCascades(initialMatched) {
   state.locked = true;
-  var matched = findMatches();
+  var matched = initialMatched || findMatches();
 
   function loop() {
     if (matched.size === 0) {
+      maybeLevelUp();
       checkWin();
       state.locked = false;
       return;
     }
+
+    matched.forEach(function (idx) { launchShootingStar(idx); });
+    applyFusionProgress(matched);
     state.score += matched.size * SCORE_PER;
+    if (state.streak > 0 && state.streak % 5 === 0) triggerSupernova();
     updateHUD();
+
     clearAndRefill(matched).then(function () {
       matched = findMatches();
       loop();
@@ -178,6 +273,54 @@ function processCascades() {
   }
 
   loop();
+}
+
+function applyFusionProgress(matched) {
+  matched.forEach(function (idx) {
+    var star = state.board[idx];
+    if (!star) return;
+    if (star.id === 'yellow') state.fusion.yellow++;
+    if (star.id === 'blue') state.fusion.blue++;
+  });
+
+  if (!state.fusion.ready &&
+      state.fusion.yellow >= FUSION_GOAL &&
+      state.fusion.blue   >= FUSION_GOAL) {
+    state.fusion.ready = true;
+    showMessage('Fusion unlocked — Green Star added to the grid.');
+    spawnFusionStar();
+    triggerSupernova();
+  }
+}
+
+function spawnFusionStar() {
+  var open = [];
+  for (var i = 0; i < state.board.length; i++) {
+    if (state.board[i] && !state.board[i].locked) open.push(i);
+  }
+  if (!open.length) return;
+  var idx = open[Math.floor(Math.random() * open.length)];
+  state.board[idx] = STAR_LIBRARY.green;
+  renderBoard();
+}
+
+function maybeLevelUp() {
+  while (state.level < LEVEL_THRESHOLDS.length - 1 &&
+         state.score >= LEVEL_THRESHOLDS[state.level]) {
+    levelUp();
+  }
+}
+
+function levelUp() {
+  if (state.level >= LEVELS.length) return;
+  state.level++;
+  showMessage('Level ' + state.level + ' — harder tiles unlocked.');
+  triggerSupernova();
+  var lockedIdx = state.board.findIndex(function (s) { return s && s.locked; });
+  if (lockedIdx >= 0) {
+    state.board[lockedIdx] = randomType({ allowLocked: false });
+    renderBoard();
+  }
 }
 
 /* ── Swap Logic ── */
@@ -188,22 +331,33 @@ function swapCells(a, b) {
 }
 
 function attemptSwap(a, b) {
-  if (state.locked) return;
+  if (state.locked || !state.running) return;
+  if (state.board[a].locked || state.board[b].locked) {
+    showMessage('Black Hole tile — level up or clear around it.');
+    return;
+  }
 
   swapCells(a, b);
-  state.moves++;
-  updateHUD();
+  state.moves = Math.max(0, state.moves - 1);
+  state.lastMoveAt = Date.now();
   renderBoard(); // show the attempted swap
 
   var matched = findMatches();
   if (matched.size > 0) {
-    processCascades();
+    state.streak++;
+    processCascades(matched);
   } else {
     swapCells(a, b);
+    state.streak = 0;
     renderBoard(); // revert visually immediately
     showMessage('No match - try again');
     setTimeout(function () { showMessage(''); }, 1200);
   }
+  if (state.moves <= 0 && state.running) {
+    state.running = false;
+    showMessage('No moves left — start a new run.');
+  }
+  updateHUD();
 }
 
 /* ── Input Handlers ── */
@@ -211,6 +365,10 @@ function onCellClick(index) {
   if (state.locked || !state.running) return;
 
   var cells = dom.board.querySelectorAll('.square');
+  if (state.board[index] && state.board[index].locked) {
+    showMessage('Locked tile — clear matches nearby or level up.');
+    return;
+  }
   if (state.selected === null) {
     state.selected = index;
     cells[index].classList.add('selected');
@@ -253,12 +411,53 @@ function onCellKey(e, index) {
   }
 }
 
+function findHintMove() {
+  for (var i = 0; i < CELL_COUNT; i++) {
+    var neighbors = [];
+    var pos = toRowCol(i);
+    if (pos.col < GRID_SIZE - 1) neighbors.push(i + 1);
+    if (pos.row < GRID_SIZE - 1) neighbors.push(i + GRID_SIZE);
+
+    for (var n = 0; n < neighbors.length; n++) {
+      var j = neighbors[n];
+      if (state.board[i].locked || state.board[j].locked) continue;
+      swapCells(i, j);
+      var match = findMatches();
+      swapCells(i, j);
+      if (match.size > 0) return { a: i, b: j };
+    }
+  }
+  return null;
+}
+
+function clearHint() {
+  var hints = dom.board ? dom.board.querySelectorAll('.square.hint') : [];
+  hints.forEach(function (c) { c.classList.remove('hint'); });
+}
+
+function showHint() {
+  if (!dom.board || !state.running || state.locked) return;
+  clearHint();
+  var move = findHintMove();
+  if (!move) {
+    showMessage('No moves detected — refresh the grid.');
+    if (dom.guideText) dom.guideText.textContent = 'No moves left; start a new run.';
+    return;
+  }
+  var cells = dom.board.querySelectorAll('.square');
+  if (cells[move.a]) cells[move.a].classList.add('hint');
+  if (cells[move.b]) cells[move.b].classList.add('hint');
+  showMessage('Angel Guide: swap the glowing tiles.');
+  if (dom.guideText) dom.guideText.textContent = 'I’ve scanned the data-stream... try swapping the highlighted pair.';
+  setTimeout(clearHint, 2500);
+}
+
 /* ── Win Condition ── */
 function checkWin() {
   if (state.score >= WIN_SCORE) {
     state.running = false;
-    showMessage('SEVEN STARS ALIGNED — MYSTERY SOLVED');
-    dom.board.classList.add('board-complete');
+    showMessage('SEVEN STARS ALIGNED — GREEN ZONE UNLOCKED');
+    if (dom.board) dom.board.classList.add('board-complete');
   }
 }
 
@@ -286,7 +485,7 @@ function seedBoard() {
   state.board = [];
   for (var i = 0; i < CELL_COUNT; i++) {
     var star;
-    do { star = randomType(); } while (wouldMatchOnPlace(i, star));
+    do { star = randomType({ allowLocked: false }); } while (wouldMatchOnPlace(i, star));
     state.board.push(star);
   }
 }
@@ -294,22 +493,31 @@ function seedBoard() {
 /* ── New Game ── */
 function startGame() {
   state.score      = 0;
-  state.moves      = 0;
+  state.moves      = 30;
+  state.level      = 1;
+  state.streak     = 0;
+  state.fusion     = { yellow: 0, blue: 0, ready: false };
   state.selected   = null;
   state.locked     = false;
   state.running    = true;
   state.focusIndex = 0;
+  state.lastMoveAt = Date.now();
   seedBoard();
   renderBoard();
   updateHUD();
   showMessage('Match the Seven Stars');
-  dom.board.classList.remove('board-complete');
+  if (dom.board) dom.board.classList.remove('board-complete');
 }
 
 /* ── Bootstrap ── */
 function init() {
   cacheDom();
   if (dom.newGame) dom.newGame.addEventListener('click', startGame);
+  if (dom.hint) dom.hint.addEventListener('click', showHint);
+  setInterval(function () {
+    if (!state.running) return;
+    if (Date.now() - state.lastMoveAt > 12000) showHint();
+  }, 12000);
   startGame();
 }
 

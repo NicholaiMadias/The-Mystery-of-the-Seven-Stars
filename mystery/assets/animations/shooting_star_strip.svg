@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 96" width="576" height="96">
+  <defs>
+    <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#38bdf8" stop-opacity="0.5"/>
+      <stop offset="80%" stop-color="#f8fafc" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#trail)" stroke-width="6" stroke-linecap="round">
+    <line x1="10" y1="48" x2="70" y2="48"/>
+    <line x1="106" y1="48" x2="166" y2="48"/>
+    <line x1="202" y1="48" x2="262" y2="48"/>
+    <line x1="298" y1="48" x2="358" y2="48"/>
+    <line x1="394" y1="48" x2="454" y2="48"/>
+    <line x1="490" y1="48" x2="550" y2="48"/>
+  </g>
+  <g fill="#fff" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M70 48 80 45 83 35 86 45 96 48 86 51 83 61 80 51z" fill="#fff" stroke="#38bdf8"/>
+    <path d="M166 48 176 44 180 34 184 44 194 48 184 52 180 62 176 52z" fill="#fff" stroke="#38bdf8" opacity="0.9"/>
+    <path d="M262 48 272 43 277 33 282 43 292 48 282 53 277 63 272 53z" fill="#fff" stroke="#38bdf8" opacity="0.85"/>
+    <path d="M358 48 368 42 374 32 380 42 390 48 380 54 374 64 368 54z" fill="#fff" stroke="#38bdf8" opacity="0.78"/>
+    <path d="M454 48 464 41 471 31 478 41 488 48 478 55 471 65 464 55z" fill="#fff" stroke="#38bdf8" opacity="0.72"/>
+    <path d="M534 48 544 40 552 30 560 40 570 48 560 56 552 66 544 56z" fill="#fff" stroke="#38bdf8" opacity="0.66"/>
+  </g>
+</svg>
