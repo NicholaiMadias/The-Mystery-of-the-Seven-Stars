@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starfield Gem-Link</title>
+  <style>
+    :root {
+      --gold: #ffd700;
+      --silver: #c0c0c0;
+      --nebula: rgba(74, 35, 90, 0.9);
+      --space-dark: #0a0e27;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0a0e27 100%);
+      color: var(--gold);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 20px var(--gold), 0 0 40px var(--gold);
+      letter-spacing: 3px;
+    }
+
+    .subtitle {
+      color: var(--silver);
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      letter-spacing: 2px;
+    }
+
+    .score-panel {
+      background: rgba(255, 215, 0, 0.1);
+      border: 2px solid var(--gold);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+
+    .score {
+      font-size: 2em;
+      font-weight: bold;
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold);
+    }
+
+    #match-board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto 20px;
+      padding: 15px;
+      background: var(--nebula);
+      border: 3px solid var(--gold);
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), inset 0 0 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .gem {
+      aspect-ratio: 1;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .gem:hover {
+      transform: scale(1.15) rotate(5deg);
+      filter: brightness(1.4) drop-shadow(0 0 10px currentColor);
+    }
+
+    .gem.selected {
+      transform: scale(1.2);
+      filter: brightness(1.5) drop-shadow(0 0 15px var(--gold));
+      box-shadow: 0 0 20px var(--gold);
+    }
+
+    /* Gem types */
+    .gem-red { background-color: #ff4444; }
+    .gem-blue { background-color: #4444ff; }
+    .gem-green { background-color: #44ff44; }
+    .gem-yellow { background-color: #ffff44; }
+    .gem-purple { background-color: #ff44ff; }
+    .gem-orange { background-color: #ff9944; }
+
+    /* Match animation */
+    .gem.matched {
+      animation: explode 0.5s forwards;
+    }
+
+    @keyframes explode {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(2.5) rotate(180deg);
+        opacity: 0.8;
+        filter: brightness(2);
+      }
+      100% {
+        transform: scale(0);
+        opacity: 0;
+      }
+    }
+
+    .message {
+      min-height: 30px;
+      font-size: 1.2em;
+      color: var(--gold);
+      margin: 15px 0;
+      text-shadow: 0 0 10px var(--gold);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--gold) 0%, #ffed4e 100%);
+      color: var(--space-dark);
+      border: none;
+      padding: 12px 24px;
+      font-size: 1em;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+      background: linear-gradient(135deg, #ffed4e 0%, var(--gold) 100%);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .footer {
+      margin-top: 30px;
+      color: var(--silver);
+      font-size: 0.8em;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.8em;
+      }
+      #match-board {
+        max-width: 320px;
+        gap: 4px;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⭐ STARFIELD GEM-LINK ⭐</h1>
+    <div class="subtitle">NEXUS ARCADE OS</div>
+
+    <div class="score-panel">
+      <div>SCORE</div>
+      <div class="score" id="score">0</div>
+    </div>
+
+    <div id="match-board"></div>
+
+    <div class="message" id="message">Match 3 or more gems!</div>
+
+    <div class="controls">
+      <button onclick="resetGame()">🔄 New Game</button>
+      <button onclick="saveHighScore()">💾 Save Score</button>
+    </div>
+
+    <div class="footer">
+      Click two adjacent gems to swap • Match 3+ to score
+    </div>
+  </div>
+
+  <script>
+    const BOARD_SIZE = 8;
+    const GEM_TYPES = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+    let board = [];
+    let score = 0;
+    let selectedGem = null;
+
+    function createBoard() {
+      const boardElement = document.getElementById('match-board');
+      boardElement.innerHTML = '';
+      board = [];
+
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        board[row] = [];
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          const gemType = GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
+          board[row][col] = gemType;
+
+          const gem = document.createElement('div');
+          gem.className = `gem gem-${gemType}`;
+          gem.dataset.row = row;
+          gem.dataset.col = col;
+          gem.onclick = () => selectGem(row, col);
+          boardElement.appendChild(gem);
+        }
+      }
+
+      // Remove initial matches
+      while (findMatches().length > 0) {
+        removeMatches();
+        fillBoard();
+      }
+    }
+
+    function selectGem(row, col) {
+      const gem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+
+      if (selectedGem === null) {
+        selectedGem = { row, col, element: gem };
+        gem.classList.add('selected');
+      } else {
+        const prevGem = selectedGem;
+        prevGem.element.classList.remove('selected');
+
+        // Check if gems are adjacent
+        const rowDiff = Math.abs(row - prevGem.row);
+        const colDiff = Math.abs(col - prevGem.col);
+
+        if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
+          swapGems(prevGem.row, prevGem.col, row, col);
+        }
+
+        selectedGem = null;
+      }
+    }
+
+    function swapGems(row1, col1, row2, col2) {
+      // Swap in board array
+      const temp = board[row1][col1];
+      board[row1][col1] = board[row2][col2];
+      board[row2][col2] = temp;
+
+      // Update DOM
+      updateBoard();
+
+      // Check for matches
+      const matches = findMatches();
+      if (matches.length > 0) {
+        setTimeout(() => {
+          removeMatches();
+          updateScore(matches.length);
+          fillBoard();
+        }, 300);
+      } else {
+        // Swap back if no matches
+        setTimeout(() => {
+          board[row1][col1] = board[row2][col2];
+          board[row2][col2] = temp;
+          updateBoard();
+          showMessage('No matches! Try again.');
+        }, 300);
+      }
+    }
+
+    function findMatches() {
+      const matches = new Set();
+
+      // Check horizontal matches
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE - 2; col++) {
+          const gem = board[row][col];
+          if (gem && board[row][col + 1] === gem && board[row][col + 2] === gem) {
+            matches.add(`${row},${col}`);
+            matches.add(`${row},${col + 1}`);
+            matches.add(`${row},${col + 2}`);
+          }
+        }
+      }
+
+      // Check vertical matches
+      for (let col = 0; col < BOARD_SIZE; col++) {
+        for (let row = 0; row < BOARD_SIZE - 2; row++) {
+          const gem = board[row][col];
+          if (gem && board[row + 1][col] === gem && board[row + 2][col] === gem) {
+            matches.add(`${row},${col}`);
+            matches.add(`${row + 1},${col}`);
+            matches.add(`${row + 2},${col}`);
+          }
+        }
+      }
+
+      return Array.from(matches);
+    }
+
+    function removeMatches() {
+      const matches = findMatches();
+
+      matches.forEach(match => {
+        const [row, col] = match.split(',').map(Number);
+        const gem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (gem) {
+          gem.classList.add('matched');
+        }
+        board[row][col] = null;
+      });
+    }
+
+    function fillBoard() {
+      // Drop existing gems
+      for (let col = 0; col < BOARD_SIZE; col++) {
+        for (let row = BOARD_SIZE - 1; row >= 0; row--) {
+          if (board[row][col] === null) {
+            // Find gem above
+            for (let r = row - 1; r >= 0; r--) {
+              if (board[r][col] !== null) {
+                board[row][col] = board[r][col];
+                board[r][col] = null;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // Fill empty spaces with new gems
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          if (board[row][col] === null) {
+            board[row][col] = GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
+          }
+        }
+      }
+
+      setTimeout(() => {
+        updateBoard();
+        // Check for new matches
+        const newMatches = findMatches();
+        if (newMatches.length > 0) {
+          setTimeout(() => {
+            removeMatches();
+            updateScore(newMatches.length);
+            fillBoard();
+          }, 300);
+        }
+      }, 500);
+    }
+
+    function updateBoard() {
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          const gem = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+          if (gem) {
+            gem.className = `gem gem-${board[row][col]}`;
+          }
+        }
+      }
+    }
+
+    function updateScore(matchCount) {
+      const points = matchCount * 100;
+      score += points;
+      document.getElementById('score').textContent = score;
+      showMessage(`+${points} points! 🌟`);
+    }
+
+    function showMessage(text) {
+      const messageEl = document.getElementById('message');
+      messageEl.textContent = text;
+      setTimeout(() => {
+        messageEl.textContent = 'Match 3 or more gems!';
+      }, 2000);
+    }
+
+    function resetGame() {
+      score = 0;
+      document.getElementById('score').textContent = '0';
+      createBoard();
+      showMessage('New game started!');
+    }
+
+    function saveHighScore() {
+      const email = prompt('Enter your email to save your score:');
+      if (email) {
+        google.script.run
+          .withSuccessHandler((result) => {
+            if (result.success) {
+              showMessage(`Score saved! 🎉`);
+            }
+          })
+          .withFailureHandler((error) => {
+            showMessage('Error saving score.');
+            console.error(error);
+          })
+          .saveScore(email, score);
+      }
+    }
+
+    // Initialize game on load
+    window.addEventListener('DOMContentLoaded', () => {
+      createBoard();
+    });
+  </script>
+</body>
+</html>
