@@ -56,7 +56,7 @@ const App = () => {
   const [view, setView] = useState('overworld');
   const [isMatrixMode, setIsMatrixMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [termHistory, setTermHistory] = useState(['[SYSTEM] Nexus OS v15.0 Active.', '[AUTH] Handshake v2 initialized.', '[DOMAIN] nicholai.org sector online.']);
+  const [termHistory, setTermHistory] = useState(['[SYSTEM] Nexus OS v15.0 Active.', '[AUTH] Handshake v2 initialized.', '[DOMAIN] voj.amazinggracehl.org sector online.']);
   const [termInput, setTermInput] = useState('');
   
   // Upgrade Layer 5: RBAC & Achievements
@@ -313,7 +313,7 @@ const App = () => {
                     {termHistory.map((line, i) => <div key={i} className={line.startsWith('>') ? 'text-blue-400' : 'text-[#00ff41] opacity-80'}>{line}</div>)}
                  </div>
                  <div className="flex items-center gap-3 border-t border-white/5 pt-4">
-                    <span className="font-black text-blue-500">guardian@nicholai.org:~$</span>
+                    <span className="font-black text-blue-500">guardian@voj.amazinggracehl.org:~$</span>
                     <input autoFocus value={termInput} onChange={e => setTermInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCommand(termInput)} className="flex-1" />
                  </div>
               </div>

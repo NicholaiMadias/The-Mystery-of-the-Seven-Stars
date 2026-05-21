@@ -1,13 +1,13 @@
 # ✨ The Mystery of the Seven Stars
 
-> *A mythic-modern interactive experience built on the Nexus OS platform.*
+> *A mythic-modern interactive experience built on the Nexus OS platform for the Voice of Jesus Ministry.*
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
-[![Deploy: GitHub Pages](https://img.shields.io/badge/Deploy-GitHub_Pages-blue.svg)](https://nicholai.org)
+[![Deploy: GitHub Pages](https://img.shields.io/badge/Deploy-GitHub_Pages-blue.svg)](https://voj.amazinggracehl.org)
 
 ## 🌌 Overview
 
-**The Mystery of the Seven Stars** is a gamified constellation puzzle and operator dashboard deployed at [Nicholai.org](https://nicholai.org). It combines an interactive star-matching puzzle game with the Nexus OS command interface — featuring Firebase authentication, real-time telemetry, and achievement-gated content.
+**The Mystery of the Seven Stars** is a gamified constellation puzzle and operator dashboard deployed at [voj.amazinggracehl.org](https://voj.amazinggracehl.org) for the Voice of Jesus Ministry. It combines an interactive star-matching puzzle game with the Nexus OS command interface — featuring Firebase authentication, real-time telemetry, and achievement-gated content.
 
 ## 🗂️ Project Structure
 
@@ -25,7 +25,7 @@
 ├── vite.config.js          # Vite configuration
 ├── tailwind.config.js      # Tailwind CSS config
 ├── postcss.config.js       # PostCSS config
-├── CNAME                   # Custom domain (Nicholai.org)
+├── CNAME                   # Custom domain (voj.amazinggracehl.org)
 └── LICENSE                 # CC0-1.0
 ```
 
@@ -53,7 +53,7 @@ npm run preview
 | Styling    | Tailwind CSS 3                     |
 | Auth       | Firebase Authentication            |
 | Database   | Cloud Firestore                    |
-| Hosting    | GitHub Pages (Nicholai.org)        |
+| Hosting    | GitHub Pages (voj.amazinggracehl.org) |
 | Game       | Vanilla JS Canvas-free puzzle engine |
 
 ## 🎮 Features
