@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  MapPin, Zap, Rocket, Star, Globe, Terminal as TermIcon, User, 
-  TerminalSquare, Layout, Code2, Wrench, FileText, ExternalLink, 
+import {
+  MapPin, Zap, Rocket, Star, Globe, Terminal as TermIcon, User,
+  TerminalSquare, Layout, Code2, Wrench, FileText, ExternalLink,
   ShieldAlert, BatteryFull, ChevronRight, Gamepad2, MessageSquare,
   Save, Search, Download, BookOpen, ShieldCheck, Trophy, Sparkles,
   Home, Wifi, Trash2, Droplets, Car, Coffee, Phone, Mail, UploadCloud,
-  CheckCircle2, PlusCircle, LogIn, Github, Menu, X, ToggleRight, ToggleLeft, 
+  CheckCircle2, PlusCircle, LogIn, Github, Menu, X, ToggleRight, ToggleLeft,
   Cpu, Activity, History, Shield, AlertTriangle, Lock, Unlock, RefreshCw
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, 
-  GoogleAuthProvider, GithubAuthProvider, signInWithPopup, linkWithPopup 
+import {
+  getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken,
+  GoogleAuthProvider, GithubAuthProvider, signInWithPopup, linkWithPopup
 } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, getDoc } from 'firebase/firestore';
+import { CANONICAL_DOMAIN, url } from './config/domain';
 
 // --- SYSTEM INITIALIZATION ---
 // Guard against missing or malformed __firebase_config at runtime
@@ -44,9 +45,9 @@ const NEXUS_DATA = {
   },
   nodes: [
     { id: 'tpa_node', name: 'Tampa HQ', x: 20, y: 40, type: 'hub', color: '#00ff41', icon: MapPin },
-    { id: 'match3_node', name: 'Stellara Grid', x: 45, y: 30, type: 'game', color: '#00ff41', icon: Gamepad2, url: 'https://nicholai.org/seven-stars.html' },
+    { id: 'match3_node', name: 'Stellara Grid', x: 45, y: 30, type: 'game', color: '#00ff41', icon: Gamepad2, url: url('/seven-stars.html') },
     { id: 'housing_node', name: 'AG Housing', x: 35, y: 70, type: 'housing', color: '#00ff41', icon: Home, url: 'https://AmazingGraceHomeLiving.com' },
-    { id: 'mystery_node', name: 'Seven Stars', x: 65, y: 75, type: 'mystery', color: '#00ff41', icon: Star, url: 'https://nicholai.org/seven-stars.html' },
+    { id: 'mystery_node', name: 'Seven Stars', x: 65, y: 75, type: 'mystery', color: '#00ff41', icon: Star, url: url('/seven-stars.html') },
     { id: 'mnl_gateway', name: 'Manilla B06', x: 80, y: 25, type: 'hub', color: '#00ff41', icon: Globe }
   ]
 };
@@ -56,7 +57,7 @@ const App = () => {
   const [view, setView] = useState('overworld');
   const [isMatrixMode, setIsMatrixMode] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [termHistory, setTermHistory] = useState(['[SYSTEM] Nexus OS v15.0 Active.', '[AUTH] Handshake v2 initialized.', '[DOMAIN] voj.amazinggracehl.org sector online.']);
+  const [termHistory, setTermHistory] = useState(['[SYSTEM] Nexus OS v15.0 Active.', '[AUTH] Handshake v2 initialized.', `[DOMAIN] ${CANONICAL_DOMAIN} sector online.`]);
   const [termInput, setTermInput] = useState('');
   
   // Upgrade Layer 5: RBAC & Achievements
@@ -313,7 +314,7 @@ const App = () => {
                     {termHistory.map((line, i) => <div key={i} className={line.startsWith('>') ? 'text-blue-400' : 'text-[#00ff41] opacity-80'}>{line}</div>)}
                  </div>
                  <div className="flex items-center gap-3 border-t border-white/5 pt-4">
-                    <span className="font-black text-blue-500">guardian@voj.amazinggracehl.org:~$</span>
+                    <span className="font-black text-blue-500">guardian@{CANONICAL_DOMAIN}:~$</span>
                     <input autoFocus value={termInput} onChange={e => setTermInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCommand(termInput)} className="flex-1" />
                  </div>
               </div>
