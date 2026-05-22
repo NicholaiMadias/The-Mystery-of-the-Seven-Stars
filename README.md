@@ -45,6 +45,15 @@ npm run build
 npm run preview
 ```
 
+## 🌐 Deployment Domains
+
+| Domain | Purpose |
+|--------|---------|
+| [voj.amazinggracehl.org](https://voj.amazinggracehl.org) | **Primary** — Voice of Jesus Ministry deployment |
+| [nicholai.org/ministry](https://nicholai.org/ministry) | **Backup** — Portfolio mirror (scoped to `/ministry` to avoid root-level conflicts) |
+
+Domain configuration is centralized in [`src/config/domain.js`](src/config/domain.js).
+
 ## 🔧 Tech Stack
 
 | Layer      | Technology                         |
