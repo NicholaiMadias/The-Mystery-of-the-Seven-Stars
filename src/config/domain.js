@@ -1,5 +1,5 @@
 // Domain configuration for Voice of Jesus Ministry
-export const CANONICAL_DOMAIN = "voj.amazinggracehl.org";
+export const CANONICAL_DOMAIN = "voiceofJesusMinistries.com";
 // Backup domain (portfolio site, scoped to /ministry to avoid conflicts)
 export const FALLBACK_DOMAIN = "nicholai.org";
 export const FALLBACK_BASE_PATH = "/ministry";

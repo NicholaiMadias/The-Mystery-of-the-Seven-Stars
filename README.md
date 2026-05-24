@@ -3,11 +3,11 @@
 > *A mythic-modern interactive experience built on the Nexus OS platform for the Voice of Jesus Ministry.*
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
-[![Deploy: GitHub Pages](https://img.shields.io/badge/Deploy-GitHub_Pages-blue.svg)](https://voj.amazinggracehl.org)
+[![Deploy: GitHub Pages](https://img.shields.io/badge/Deploy-GitHub_Pages-blue.svg)](https://voiceofJesusMinistries.com)
 
 ## 🌌 Overview
 
-**The Mystery of the Seven Stars** is a gamified constellation puzzle and operator dashboard deployed at [voj.amazinggracehl.org](https://voj.amazinggracehl.org) for the Voice of Jesus Ministry. It combines an interactive star-matching puzzle game with the Nexus OS command interface — featuring Firebase authentication, real-time telemetry, and achievement-gated content.
+**The Mystery of the Seven Stars** is a gamified constellation puzzle and operator dashboard deployed at [voiceofJesusMinistries.com](https://voiceofJesusMinistries.com) for the Voice of Jesus Ministry. It combines an interactive star-matching puzzle game with the Nexus OS command interface — featuring Firebase authentication, real-time telemetry, and achievement-gated content.
 
 ## 🗂️ Project Structure
 
@@ -20,12 +20,15 @@
 │   ├── index.html          # Game shell
 │   ├── script.js           # Puzzle engine
 │   └── style.css           # Game styles (CSS-only visuals)
+├── voj/                    # Voice of Jesus Ministry landing page
+│   ├── index.html          # Ministry site
+│   └── style.css           # Ministry styles
 ├── index.html              # Vite entry point
 ├── package.json            # Dependencies and scripts
 ├── vite.config.js          # Vite configuration
 ├── tailwind.config.js      # Tailwind CSS config
 ├── postcss.config.js       # PostCSS config
-├── CNAME                   # Custom domain (voj.amazinggracehl.org)
+├── CNAME                   # Custom domain (voiceofJesusMinistries.com)
 └── LICENSE                 # CC0-1.0
 ```
 
@@ -49,7 +52,7 @@ npm run preview
 
 | Domain | Purpose |
 |--------|---------|
-| [voj.amazinggracehl.org](https://voj.amazinggracehl.org) | **Primary** — Voice of Jesus Ministry deployment |
+| [voiceofJesusMinistries.com](https://voiceofJesusMinistries.com) | **Primary** — Voice of Jesus Ministry deployment |
 | [nicholai.org/ministry](https://nicholai.org/ministry) | **Backup** — Portfolio mirror (scoped to `/ministry` to avoid root-level conflicts) |
 
 Domain configuration is centralized in [`src/config/domain.js`](src/config/domain.js).
@@ -57,18 +60,19 @@ Domain configuration is centralized in [`src/config/domain.js`](src/config/domai
 ## 🔧 Tech Stack
 
 | Layer      | Technology                         |
-|------------|------------------------------------|  
+|------------|------------------------------------|
 | Framework  | React 18 + Vite 5                  |
 | Styling    | Tailwind CSS 3                     |
 | Auth       | Firebase Authentication            |
 | Database   | Cloud Firestore                    |
-| Hosting    | GitHub Pages (voj.amazinggracehl.org) |
+| Hosting    | GitHub Pages (voiceofJesusMinistries.com) |
 | Game       | Vanilla JS Canvas-free puzzle engine |
 
 ## 🎮 Features
 
 - **Star Match Puzzle** — Swap adjacent stars to form matches of 3+ in a row/column. Reach the score threshold to unlock the mystery.
 - **Nexus OS Dashboard** — Operator-grade command interface with overworld navigation, telemetry panels, and terminal emulator.
+- **Voice of Jesus Ministry** — Faith-based outreach landing page at [voiceofJesusMinistries.com](https://voiceofJesusMinistries.com).
 - **Firebase Auth** — Anonymous, Google, and GitHub sign-in with audit logging.
 - **Achievement Gating** — Unlock content and features by reaching milestones.
 - **Responsive Design** — Mobile-first layout with full desktop support.
