@@ -20,12 +20,15 @@
 │   ├── index.html          # Game shell
 │   ├── script.js           # Puzzle engine
 │   └── style.css           # Game styles (CSS-only visuals)
+├── voj/                    # Voice of Jesus Ministry landing page
+│   ├── index.html          # Ministry site (voj.amazinggracehl.org)
+│   └── style.css           # Ministry styles
 ├── index.html              # Vite entry point
 ├── package.json            # Dependencies and scripts
 ├── vite.config.js          # Vite configuration
 ├── tailwind.config.js      # Tailwind CSS config
 ├── postcss.config.js       # PostCSS config
-├── CNAME                   # Custom domain (Nicholai.org)
+├── CNAME                   # Custom domain (amazinggracehl.org)
 └── LICENSE                 # CC0-1.0
 ```
 
@@ -60,6 +63,7 @@ npm run preview
 
 - **Star Match Puzzle** — Swap adjacent stars to form matches of 3+ in a row/column. Reach the score threshold to unlock the mystery.
 - **Nexus OS Dashboard** — Operator-grade command interface with overworld navigation, telemetry panels, and terminal emulator.
+- **Voice of Jesus Ministry** — Faith-based outreach landing page at [voj.amazinggracehl.org](https://voj.amazinggracehl.org).
 - **Firebase Auth** — Anonymous, Google, and GitHub sign-in with audit logging.
 - **Achievement Gating** — Unlock content and features by reaching milestones.
 - **Responsive Design** — Mobile-first layout with full desktop support.

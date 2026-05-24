@@ -47,7 +47,8 @@ const NEXUS_DATA = {
     { id: 'match3_node', name: 'Stellara Grid', x: 45, y: 30, type: 'game', color: '#00ff41', icon: Gamepad2, url: 'https://nicholai.org/seven-stars.html' },
     { id: 'housing_node', name: 'AG Housing', x: 35, y: 70, type: 'housing', color: '#00ff41', icon: Home, url: 'https://AmazingGraceHomeLiving.com' },
     { id: 'mystery_node', name: 'Seven Stars', x: 65, y: 75, type: 'mystery', color: '#00ff41', icon: Star, url: 'https://nicholai.org/seven-stars.html' },
-    { id: 'mnl_gateway', name: 'Manilla B06', x: 80, y: 25, type: 'hub', color: '#00ff41', icon: Globe }
+    { id: 'mnl_gateway', name: 'Manilla B06', x: 80, y: 25, type: 'hub', color: '#00ff41', icon: Globe },
+    { id: 'voj_node', name: 'Voice of Jesus', x: 60, y: 50, type: 'ministry', color: '#c9a84c', icon: BookOpen, url: 'https://voj.amazinggracehl.org' }
   ]
 };
 
@@ -256,6 +257,9 @@ const App = () => {
                  </a>
                  <a href="https://nicholai.org/seven-stars.html" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-slate-400 hover:text-amber-400 transition-all font-bold text-sm">
                     <Star size={18} /> Seven Stars
+                 </a>
+                 <a href="https://voj.amazinggracehl.org" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-slate-400 hover:text-amber-400 transition-all font-bold text-sm">
+                    <BookOpen size={18} /> Voice of Jesus Ministry
                  </a>
               </div>
            </div>
