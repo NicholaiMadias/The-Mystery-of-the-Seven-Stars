@@ -35,12 +35,12 @@ jobs:
           fi
           echo "amazinggracehomeliving.com OK ($status_code)"
 
-      # 3. Check the Voice of Jesus Ministry (voj.amazinggracehl.org)
+      # 3. Check the Voice of Jesus Ministry (voiceofJesusMinistries.com)
       - name: VOJ Ministry Health Check
         run: |
-          status_code=$(curl -o /dev/null -s -w "%{http_code}" https://voj.amazinggracehl.org)
+          status_code=$(curl -o /dev/null -s -w "%{http_code}" https://voiceofJesusMinistries.com)
           if [ "$status_code" -ne 200 ]; then
-            echo "VOJ Ministry (voj.amazinggracehl.org) is down! Status: $status_code"
+            echo "VOJ Ministry (voiceofJesusMinistries.com) is down! Status: $status_code"
             exit 1
           fi
-          echo "voj.amazinggracehl.org OK ($status_code)"
+          echo "voiceofJesusMinistries.com OK ($status_code)"
