@@ -18,7 +18,10 @@ jobs:
       # 1. Check the Arcade (GitHub Pages — nicholai.org)
       - name: Arcade Health Check
         run: |
-          status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://nicholai.org || echo "000")
+          if ! status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://nicholai.org); then
+            echo "Arcade (nicholai.org) is down! Request failed."
+            exit 1
+          fi
           if [ "$status_code" != "200" ]; then
             echo "Arcade (nicholai.org) is down! Status: $status_code"
             exit 1
@@ -28,7 +31,10 @@ jobs:
       # 2. Check the Listings (Netlify — amazinggracehomeliving.com)
       - name: Listings Health Check
         run: |
-          status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://amazinggracehomeliving.com || echo "000")
+          if ! status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://amazinggracehomeliving.com); then
+            echo "Listings (Amazing Grace) is down! Request failed."
+            exit 1
+          fi
           if [ "$status_code" != "200" ]; then
             echo "Listings (Amazing Grace) is down! Status: $status_code"
             exit 1
@@ -38,7 +44,10 @@ jobs:
       # 3. Check the Voice of Jesus Ministry (voiceofJesusMinistries.com)
       - name: VOJ Ministry Health Check
         run: |
-          status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://voiceofJesusMinistries.com || echo "000")
+          if ! status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://voiceofJesusMinistries.com); then
+            echo "VOJ Ministry (voiceofJesusMinistries.com) is down! Request failed."
+            exit 1
+          fi
           if [ "$status_code" != "200" ]; then
             echo "VOJ Ministry (voiceofJesusMinistries.com) is down! Status: $status_code"
             exit 1
