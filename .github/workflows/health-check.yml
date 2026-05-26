@@ -30,7 +30,7 @@ jobs:
             echo "Arcade (nicholai.org) is down! $error_detail."
             exit 1
           fi
-          if [ "$status_code" != "200" ]; then
+          if [ "$status_code" -ne 200 ]; then
             echo "Arcade (nicholai.org) is down! Status: $status_code"
             exit 1
           fi
@@ -51,7 +51,7 @@ jobs:
             echo "Listings (Amazing Grace) is down! $error_detail."
             exit 1
           fi
-          if [ "$status_code" != "200" ]; then
+          if [ "$status_code" -ne 200 ]; then
             echo "Listings (Amazing Grace) is down! Status: $status_code"
             exit 1
           fi
@@ -72,7 +72,7 @@ jobs:
             echo "VOJ Ministry (voiceofJesusMinistries.com) is down! $error_detail."
             exit 1
           fi
-          if [ "$status_code" != "200" ]; then
+          if [ "$status_code" -ne 200 ]; then
             echo "VOJ Ministry (voiceofJesusMinistries.com) is down! Status: $status_code"
             exit 1
           fi
