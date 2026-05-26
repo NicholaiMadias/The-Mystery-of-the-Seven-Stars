@@ -18,8 +18,16 @@ jobs:
       # 1. Check the Arcade (GitHub Pages — nicholai.org)
       - name: Arcade Health Check
         run: |
-          if ! status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://nicholai.org); then
-            echo "Arcade (nicholai.org) is down! Request failed."
+          curl_exit=0
+          status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://nicholai.org) || curl_exit=$?
+          if [ "$curl_exit" -ne 0 ]; then
+            case "$curl_exit" in
+              6) error_detail="DNS resolution failed" ;;
+              7) error_detail="Connection failed" ;;
+              28) error_detail="Request timed out" ;;
+              *) error_detail="curl failed with exit code $curl_exit" ;;
+            esac
+            echo "Arcade (nicholai.org) is down! $error_detail."
             exit 1
           fi
           if [ "$status_code" != "200" ]; then
@@ -31,8 +39,16 @@ jobs:
       # 2. Check the Listings (Netlify — amazinggracehomeliving.com)
       - name: Listings Health Check
         run: |
-          if ! status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://amazinggracehomeliving.com); then
-            echo "Listings (Amazing Grace) is down! Request failed."
+          curl_exit=0
+          status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://amazinggracehomeliving.com) || curl_exit=$?
+          if [ "$curl_exit" -ne 0 ]; then
+            case "$curl_exit" in
+              6) error_detail="DNS resolution failed" ;;
+              7) error_detail="Connection failed" ;;
+              28) error_detail="Request timed out" ;;
+              *) error_detail="curl failed with exit code $curl_exit" ;;
+            esac
+            echo "Listings (Amazing Grace) is down! $error_detail."
             exit 1
           fi
           if [ "$status_code" != "200" ]; then
@@ -44,8 +60,16 @@ jobs:
       # 3. Check the Voice of Jesus Ministry (voiceofJesusMinistries.com)
       - name: VOJ Ministry Health Check
         run: |
-          if ! status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://voiceofJesusMinistries.com); then
-            echo "VOJ Ministry (voiceofJesusMinistries.com) is down! Request failed."
+          curl_exit=0
+          status_code=$(curl --connect-timeout 10 --max-time 20 -o /dev/null -s -w "%{http_code}" https://voiceofJesusMinistries.com) || curl_exit=$?
+          if [ "$curl_exit" -ne 0 ]; then
+            case "$curl_exit" in
+              6) error_detail="DNS resolution failed" ;;
+              7) error_detail="Connection failed" ;;
+              28) error_detail="Request timed out" ;;
+              *) error_detail="curl failed with exit code $curl_exit" ;;
+            esac
+            echo "VOJ Ministry (voiceofJesusMinistries.com) is down! $error_detail."
             exit 1
           fi
           if [ "$status_code" != "200" ]; then
