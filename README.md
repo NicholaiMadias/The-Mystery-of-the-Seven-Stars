@@ -67,7 +67,7 @@ This repository has been prepared for deployment under the **Voice of Jesus Mini
 - [x] CNAME configured for `voj.amazinggracehl.org`
 - [x] GitHub Pages enabled
 - [ ] Firebase project linked
-- [ ] Custom SSL certificate configured
+- [ ] HTTPS enforced (GitHub Pages)
 - [ ] Analytics/DNS records verified
 
 ## License
